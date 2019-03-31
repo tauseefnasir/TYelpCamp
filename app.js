@@ -1,20 +1,21 @@
 const express = require('express');
+var  app             = express(),
+     bodyParser      = require('body-parser'),
+     mongoose        = require('mongoose');
 
-var app = express();
-var bodyParser = require('body-parser');
-
+mongoose.connect("mongodb://localhost:27017/yelp_camp", {useNewUrlParser: true});
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
-var campgrounds = [
-    { name: "Saghar", image: "https://farm1.staticflickr.com/130/321487195_ff34bde2f5.jpg" },
-    { name: "Ratigali", image: "https://farm9.staticflickr.com/8041/7930201874_6c17ed670a.jpg" },
-    { name: "Talagang", image: "https://farm6.staticflickr.com/5181/5641024448_04fefbb64d.jpg" },
-    { name: "Chakwal", image: "https://pixabay.com/get/e83db7082af3043ed1584d05fb1d4e97e07ee3d21cac104490f1c571a2e4b4b8_340.jpg" },
-    { name: "Saghar", image: "https://farm1.staticflickr.com/130/321487195_ff34bde2f5.jpg" },
-    { name: "Ratigali", image: "https://farm9.staticflickr.com/8041/7930201874_6c17ed670a.jpg" },
-    { name: "Talagang", image: "https://farm6.staticflickr.com/5181/5641024448_04fefbb64d.jpg" },
-    { name: "Chakwal", image: "https://pixabay.com/get/e83db7082af3043ed1584d05fb1d4e97e07ee3d21cac104490f1c571a2e4b4b8_340.jpg" },
-]
+
+// schema setup
+var campgroundSchema = new mongoose.Schema({
+ name: String,
+ image: String,
+ discription: String,
+});
+
+var Campground = mongoose.model("Campground", campgroundSchema);
+
 
 app.get('/', (req, res) => {
 
@@ -22,18 +23,44 @@ app.get('/', (req, res) => {
 });
 
 app.get('/campgrounds', (req, res) => {
-
-    res.render('campgrounds', { campgrounds: campgrounds });
+//  render all campgrouns
+Campground.find({}, (err, campgrounds) =>{
+    if(err){
+        console.log(err);
+    }else{
+        res.render('index', { campgrounds: campgrounds });
+    }
 });
 app.get('/campgrounds/new',(req, res) =>{
     res.render('new');
 });
+app.get("/campground/:id",(req,res) =>{
+    Campground.findById(req.params.id , (err ,foundCampground) =>{
+        if(err){
+            console.log(err);
+        }else{
+            res.render("show",{campground: foundCampground});
+        }
+    });
+    
+});
+  
+});
+
 app.post('/campgrounds', (req, res) =>{
     var image = req.body.image;
     var name = req.body.name;
-    var newCampground = {image: image, name: name,};
-    campgrounds.push(newCampground);
-    res.redirect('/campgrounds');
+    var disc = req.body.discription;
+    var newCampground = {image: image, name: name,discription:disc};
+//    creating new campground
+Campground.create(newCampground, (err,newCampground) =>{
+    if(err){
+        console.log(); 
+      }else{
+        res.redirect('/campgrounds');
+      }
+})
+    
 });
 
 
