@@ -1,10 +1,18 @@
 const express        = require('express');
 var  app             = express(),
      bodyParser      = require('body-parser'),
+     passport        = require("passport"),
+     LocalStrategy   = require("passport-local"),
      mongoose        = require('mongoose'),
      Campground      = require("./models/campgrounds"),
+     User            = require("./models/user")
      seedDB          = require("./seeds");
-     Comment         = require("./models/comment")
+     Comment         = require("./models/comment");
+
+
+var commentRoutes =require("./routes/comments"),
+    campgroundsRoutes = require("./routes/campgrounds"),
+    indexRoutes          = require("./routes/index");
     
 mongoose.connect("mongodb://localhost:27017/yelp_camp", {useNewUrlParser: true});
 app.use(bodyParser.urlencoded({extended: true}));
@@ -13,87 +21,26 @@ app.use(express.static(__dirname + "/public"))
 
 seedDB();
 
-app.get('/', (req, res) => {
+// passport configuration
+app.use(require("express-session")({
+    secret:"secret is secret",
+    resave: false,
+    saveUninitialized:false
+}));
 
-    res.render('landings');
-});
-
-app.get('/campgrounds', (req, res) => {
-//  render all campgrouns
-Campground.find({}, (err, campgrounds) =>{
-    if(err){
-        console.log(err);
-    }else{
-        res.render('campgrounds/index', { campgrounds: campgrounds });
-    }
-});
-app.get('/campgrounds/new',(req, res) =>{
-    res.render('campgrounds/new');
-});
-
-// show route
-app.get("/campground/:id",(req,res) =>{
-    Campground.findById(req.params.id).populate("comments").exec((err ,foundCampground) =>{
-        if(err){
-            console.log(err);
-        }else{
-            res.render("campgrounds/show",{campground: foundCampground});
-        }
-    });
-    
-});
-  
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+app.use((req, res, next)=>{
+    res.locals.currentUser = req.user;
+    next();
 });
 
-app.post('/campgrounds', (req, res) =>{
-    var image = req.body.image;
-    var name = req.body.name;
-    var disc = req.body.discription;
-    var newCampground = {image: image, name: name,discription:disc};
-//    creating new campground
-Campground.create(newCampground, (err,newCampground) =>{
-    if(err){
-        console.log(); 
-      }else{
-        res.redirect('/campgrounds');
-      }
-})
-    
-});
- 
-// =================================
-// comments routes
-// =================================
+app.use(indexRoutes);
+app.use("/campgrounds", campgroundsRoutes);
+app.use(commentRoutes);
 
-app.get("/campgrounds/:id/comments/new", (req, res) =>{
-    Campground.findById(req.params.id, (err,campground)=>{
-        if(err){
-            console.log(err);
-        }else{
-            res.render("comments/new", {campground: campground});
-        }
-    });
-});
 
-app.post("/campgrounds/:id/comments", (req, res)=>{
-    console.log(req.params);
-    Campground.findById(req.params.id, (err,campground)=>{
-        if(err){
-            console.log(err);
-            res.redirect("/campgrounds")
-        }else{
-            console.log(req.body)
-            Comment.create(req.body.comment, (err, comment)=>{
-                if(err){
-                    console.log(err);
-                }else{
-                    console.log(comment);
-                    campground.comments.push(comment);
-                    campground.save();
-                    res.redirect("/campground/" + campground._id);  
-                }
-            })
-        }
-    })
-})
 app.listen(3000);
