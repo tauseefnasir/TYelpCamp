@@ -21,6 +21,7 @@ app.use(express.static(__dirname + "/public"))
 
 seedDB();
 
+
 // passport configuration
 app.use(require("express-session")({
     secret:"secret is secret",
