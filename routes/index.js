@@ -1,15 +1,23 @@
 var express = require("express");
 var router = express.Router();
 var passport = require("passport");
-var User    = require("../models/user")
+var User    = require("../models/user");
+
+
+
+// root route
+
 router.get('/', (req, res) => {
 
     res.render('landings');
 });
 
+// show register form
 router.get("/register", (req,res)=>{
     res.render("register");
 });
+
+// handle sign up logic
 
 router.post("/register", (req, res)=>{
     var newUser = new User({username: req.body.username});
@@ -24,9 +32,15 @@ router.post("/register", (req, res)=>{
     });
 });
 
+// show login form
+
 router.get("/login", (req, res)=>{
     res.render("login");
 });
+
+
+// handling login logic
+
 
 router.post("/login",passport.authenticate("local",
 {
@@ -36,10 +50,14 @@ router.post("/login",passport.authenticate("local",
 
 });
 
+// log in route
+
 router.get("/logout", (req, res)=>{
     req.logout();
     res.redirect("/login");
 });
+
+// middleware        
 
 function isLoggedIn(req, res, next){
     if(req.isAuthenticated()){

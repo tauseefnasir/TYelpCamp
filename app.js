@@ -9,10 +9,11 @@ var  app             = express(),
      seedDB          = require("./seeds");
      Comment         = require("./models/comment");
 
+// requiring routes
 
-var commentRoutes =require("./routes/comments"),
-    campgroundsRoutes = require("./routes/campgrounds"),
-    indexRoutes          = require("./routes/index");
+var commentRoutes      = require("./routes/comments"),
+    campgroundsRoutes  = require("./routes/campgrounds"),
+    indexRoutes        = require("./routes/index");
     
 mongoose.connect("mongodb://localhost:27017/yelp_camp", {useNewUrlParser: true});
 app.use(bodyParser.urlencoded({extended: true}));
@@ -41,7 +42,7 @@ app.use((req, res, next)=>{
 
 app.use(indexRoutes);
 app.use("/campgrounds", campgroundsRoutes);
-app.use(commentRoutes);
+app.use("/campgrounds/:id/comments", commentRoutes);
 
 
 app.listen(3000);
