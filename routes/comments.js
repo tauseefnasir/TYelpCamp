@@ -24,12 +24,12 @@ router.post("/", middleware.isLoggedIn, (req, res)=>{
             console.log(err);
             res.redirect("/campgrounds")
         }else{
-            console.log(req.body)
             Comment.create(req.body.comment, (err, comment)=>{
                 if(err){
                     req.flash("error", "Something went wrong");
                     console.log(err);
                 }else{
+                    console.log(req.body.comment)
                     comment.author.id = req.user._id;
                     comment.author.username = req.user.username;
                     comment.save();
